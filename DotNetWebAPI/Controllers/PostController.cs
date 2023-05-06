@@ -1,15 +1,17 @@
-﻿using DotNetWebAPI.Data;
+﻿using CoreApiResponse;
+using DotNetWebAPI.Data;
 using DotNetWebAPI.Interfaces.Manager;
 using DotNetWebAPI.Manager;
 using DotNetWebAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace DotNetWebAPI.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class PostController : ControllerBase
+    public class PostController : BaseController
     {
         IPostManager _postManager;
         public PostController(IPostManager postManager)
@@ -19,64 +21,105 @@ namespace DotNetWebAPI.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-           // var posts=_dbContext.Posts.ToList();
-            var posts=_postManager.GetAll().ToList();
-            return Ok(posts);
+            // var posts=_dbContext.Posts.ToList();
+            try {
+                var posts = _postManager.GetAll().OrderBy(c=>c.CreatedDate).ToList();
+                return CustomResult("Data loaded successfully",posts);
+            }
+            catch (Exception ex) {
+                return BadRequest(ex.Message);
+            }
+           
         }
+
+        [HttpGet]
+        public IActionResult GetAllDesc()
+        {
+            // var posts=_dbContext.Posts.ToList();
+            try
+            {
+                var posts = _postManager.GetAll().OrderBy(c => c.CreatedDate).OrderByDescending(c=>c.CreatedDate).ToList();
+                return CustomResult("Data loaded successfully", posts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
 
         [HttpGet("id")]
         public IActionResult GetById(int id)
         {
-            var post=_postManager.GetById(id);
-            if(post != null)
-            {
-                return Ok(post);
+            try {
+                var post = _postManager.GetById(id);
+                if (post != null)
+                {
+                    return Ok(post);
+                }
+                return CustomResult("Data not found",HttpStatusCode.NotFound);
+            } catch (Exception ex) {
+                return BadRequest(ex.Message);
             }
-           return NotFound();
+          
         }
         [HttpPost]
         public IActionResult Add(Post post)
         {
-            post.CreatedDate = DateTime.Now;
-            //_dbContext.Posts.Add(post);
-            //bool isSaved=-_dbContext.SaveChanges()>0;
-
-           bool isSaved=_postManager.Add(post);
-            if (isSaved)
-            {
-                return Created("",post);
+            try {
+                post.CreatedDate = DateTime.Now;
+                bool isSaved = _postManager.Add(post);
+                if (isSaved)
+                {
+                    //return Created("", post);
+                    return CustomResult("Post has been created",post);
+                }
+                return BadRequest("Failed to save");
+            } catch (Exception ex) {
+                return BadRequest(ex.Message);
             }
-            return BadRequest("Failed to save");
+         
         }
 
         [HttpPut]
         public IActionResult Edit(Post post)
         {
-            if(post.Id == 0)
-            {
-                return BadRequest("Id missing");
+            try {
+                if (post.Id == 0)
+                {
+                    return BadRequest("Id missing");
+                }
+                bool isUpdate = _postManager.Update(post);
+                if (isUpdate)
+                {
+                    return Ok(post);
+                }
+                return BadRequest("Failed to update");
+            } catch (Exception ex) {
+                return BadRequest(ex.Message);
             }
-            bool isUpdate=_postManager.Update(post);
-            if (isUpdate)
-            {
-                return Ok(post);
-            }
-            return BadRequest("Failed to update");
+           
         }
         [HttpDelete("id")]
         public IActionResult Delete(int id)
         {
-            var post=_postManager.GetById(id);
-            if (post == null)
-            {
-                return NotFound("Data not found");
+            try {
+                var post = _postManager.GetById(id);
+                if (post == null)
+                {
+                    return NotFound("Data not found");
+                }
+                bool isDelete = _postManager.Delete(post);
+                if (isDelete)
+                {
+                    return Ok("Post has been deleted");
+                }
+                return BadRequest("Failed");
+            } catch (Exception ex) {
+                return BadRequest(ex.Message);
             }
-            bool isDelete=_postManager.Delete(post);
-            if (isDelete)
-            {
-                return Ok("Post has been deleted");
-            }
-            return BadRequest("Failed");
+            
         }
        
     }

@@ -13,9 +13,30 @@ namespace DotNetWebAPI.Manager
         {
         }
 
+        public ICollection<Post> GetAll(string title)
+        {
+            return Get(c => c.Title.ToLower() == title.ToLower());
+        }
+
         public Post GetById(int id)
         {
             return GetFirstOrDefault(x=>x.Id==id);
+        }
+
+        public ICollection<Post> GetPosts(int page, int pageSize)
+        {
+            if (page <= 1)
+            {
+                page = 0;
+            }
+            int totalNumber = page * pageSize;
+            return GetAll().Skip(totalNumber).Take(pageSize).ToList();
+        }
+
+        public ICollection<Post> SearchPost(string text)
+        {
+            text=text.ToLower();
+            return Get(c=>c.Title.ToLower().Contains(text) || c.Description.ToLower().Contains(text));
         }
     }
 }

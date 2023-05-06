@@ -32,13 +32,51 @@ namespace DotNetWebAPI.Controllers
            
         }
 
+        [HttpGet("title")]
+        public IActionResult GetAll(string title)
+        {
+            try
+            {
+                var post = _postManager.GetAll(title);
+                return CustomResult("Data loaded",post.ToList());
+            }catch(Exception ex) {
+                return CustomResult(ex.Message, HttpStatusCode.BadRequest);
+            }
+        }
+
+        [HttpGet("text")]
+        public IActionResult Search(string text)
+        {
+            try
+            {
+                var post = _postManager.SearchPost(text);
+                return CustomResult("Searching Result", post);
+            }
+            catch (Exception ex)
+            {
+                return CustomResult(ex.Message, HttpStatusCode.BadRequest);
+            }
+        }
+        [HttpGet]
+        public IActionResult GetPosts(int page=1) {
+            try
+            {
+                var post = _postManager.GetPosts(page,2);
+                return CustomResult("Paging data for page no "+page,post.ToList());
+            }
+            catch (Exception ex)
+            {
+                return CustomResult(ex.Message, HttpStatusCode.BadRequest);
+            }
+        }
+
         [HttpGet]
         public IActionResult GetAllDesc()
         {
             // var posts=_dbContext.Posts.ToList();
             try
             {
-                var posts = _postManager.GetAll().OrderBy(c => c.CreatedDate).OrderByDescending(c=>c.CreatedDate).ToList();
+                var posts = _postManager.GetAll().OrderBy(c => c.CreatedDate).OrderByDescending(c=>c.CreatedDate).ThenByDescending(c=>c.Title).ToList();
                 return CustomResult("Data loaded successfully", posts);
             }
             catch (Exception ex)
